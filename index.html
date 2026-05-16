@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计计算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "微软雅黑", sans-serif;
+        }
+        body {
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 0 20px;
+            background: #f5f7fa;
+        }
+        .box {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px #eee;
+        }
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 20px;
+        }
+        .tip {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: none;
+            margin-bottom: 15px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2d8cf0;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background: #1b76d8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        th,td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 15px;
+        }
+        th {
+            background: #e8f4ff;
+        }
+        .data-show{
+            margin:15px 0;
+            line-height:1.8;
+            font-size:15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>📊 数据统计计算器</h2>
+        <div class="tip">输入格式：空格、逗号、换行均可，支持散乱数字</div>
+        <textarea id="inputData" placeholder="在此输入数据..."></textarea>
+        <button onclick="calcData()">开始计算</button>
+
+        <div class="data-show" id="dataShow"></div>
+        <table id="resTable"></table>
+    </div>
+
+<script>
+function calcData(){
+    let val = document.getElementById('inputData').value.trim();
+    if(!val){
+        alert("请输入数据！");
+        return;
+    }
+    let arr = val.split(/[\s,\n]+/).map(Number).filter(n=>!isNaN(n));
+    if(arr.length<2){
+        alert("至少输入2个数据才能计算样本方差");
+        return;
+    }
+    let sortArr = [...arr].sort((a,b)=>a-b);
+    let len = arr.length;
+
+    //平均数
+    let sum = arr.reduce((s,v)=>s+v,0);
+    let avg = sum/len;
+
+    //中位数
+    let mid;
+    if(len%2===1){
+        mid = sortArr[Math.floor(len/2)];
+    }else{
+        mid = (sortArr[len/2-1]+sortArr[len/2])/2;
+    }
+
+    //众数
+    let obj={},maxNum=0,modeArr=[];
+    arr.forEach(item=>{
+        obj[item]?obj[item]=1:obj[item]=1;
+        if(obj[item]>maxNum) maxNum=obj[item];
+    })
+    for(let k in obj){
+        if(obj[k]===maxNum) modeArr.push(k);
+    }
+    let mode = modeArr.length===len?"无众数":modeArr.join("、");
+
+    //样本方差 n-1
+    let squareSum = arr.reduce((s,v)=>s+Math.pow(v-avg,2),0);
+    let variance = squareSum/(len-1);
+
+    //展示原始+排序数据
+    document.getElementById('dataShow').innerHTML = `
+    原始数据：${arr.join("  ")}<br>
+    升序排序：${sortArr.join("  ")}<br>
+    数据总数：${len} 个
+    `;
+
+    //表格渲染结果
+    let html = `
+    <tr>
+        <th>统计项目</th>
+        <th>计算结果</th>
+    </tr>
+    <tr>
+        <td>平均数</td>
+        <td>${avg.toFixed(2)}</td>
+    </tr>
+    <tr>
+        <td>中位数</td>
+        <td>${mid.toFixed(2)}</td>
+    </tr>
+    <tr>
+        <td>众数</td>
+        <td>${mode}</td>
+    </tr>
+    <tr>
+        <td>样本方差</td>
+        <td>${variance.toFixed(2)}</td>
+    </tr>
+    `;
+    document.getElementById('resTable').innerHTML = html;
+}
+</script>
+</body>
+</html>
